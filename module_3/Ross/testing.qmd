@@ -1,0 +1,30 @@
+---
+title: "Testing Polars: housing.csv"
+format: html
+execute:
+	echo: true
+	warning: false
+	error: false
+---
+
+
+```{python}
+from io import BytesIO
+import requests
+import polars as pl
+
+URL = "https://raw.githubusercontent.com/byui-cse/cse450-course/master/data/housing.csv"
+
+resp = requests.get(URL)
+resp.raise_for_status()
+
+df = pl.read_csv(BytesIO(resp.content))
+
+print("Rows, Columns:", df.shape)
+print("Column dtypes:")
+for name, dtype in df.schema.items():
+		print(f" - {name}: {dtype}")
+
+df.head(10)
+```
+
