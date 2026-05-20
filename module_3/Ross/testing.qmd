@@ -28,3 +28,19 @@ for name, dtype in df.schema.items():
 df.head(10)
 ```
 
+```{python}
+# Show ranges (min/max) for numeric columns; unique summary for others
+for name in df.columns:
+	dtype = df.schema[name]
+	dtype_str = str(dtype).lower()
+	if "int" in dtype_str or "float" in dtype_str or "uint" in dtype_str:
+		minv = df[name].min()
+		maxv = df[name].max()
+		print(f"{name}: min={minv}, max={maxv}")
+	else:
+		uniques = df[name].unique()
+		n_unique = uniques.shape[0]
+		sample = uniques.head(10).to_list()
+		print(f"{name}: {n_unique} unique values, sample={sample}")
+```
+
