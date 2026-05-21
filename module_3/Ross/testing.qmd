@@ -29,6 +29,29 @@ df.head(10)
 ```
 
 ```{python}
+df = df.drop(
+    ["id" , "date"]
+)
+```
+
+```{python}
+before_rows = df.height
+
+df = df.filter(
+	(pl.col("bedrooms") > 0)
+	& (pl.col("bathrooms") > 0)
+	& ((pl.col("sqft_living") / pl.col("bedrooms")) >= 70)
+)
+
+removed_rows = before_rows - df.height
+
+print(f"Removed {removed_rows} rows")
+print(f"Remaining rows: {df.height}")
+
+df.head(10)
+```
+
+```{python}
 # Show ranges (min/max) for numeric columns; unique summary for others
 for name in df.columns:
 	dtype = df.schema[name]
@@ -44,3 +67,13 @@ for name in df.columns:
 		print(f"{name}: {n_unique} unique values, sample={sample}")
 ```
 
+
+```{python}
+df.sort("price" , descending = True).head(10)
+```
+
+
+
+```
+The average U.S. bedroom takes up roughly 10% of a home's total square footage. In a standard home, a primary/master bedroom averages 224 sq ft (14' x 16'), while secondary bedrooms average 120 to 132 sq ft (10' x 12' to 11' x 12').
+```
