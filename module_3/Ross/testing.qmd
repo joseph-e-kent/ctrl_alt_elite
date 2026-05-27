@@ -74,95 +74,94 @@ df.sort("price" , descending = True).head(10)
 
 ```{python}
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_absolute_error, r2_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from xgboost import XGBRegressor
 
 target = "price"
 
 model_df = df.drop_nulls([target])
-feature_df = model_df.drop(target)
-categorical_cols = feature_df.select(pl.col(pl.Utf8)).columns
-feature_df = feature_df.to_dummies(columns=categorical_cols)
+
+# Treat zipcode as a category instead of a numeric magnitude.
+feature_df = model_df.with_columns(
+	pl.col("zipcode").cast(pl.Utf8)
+).drop(target)
+
+feature_df = feature_df.to_dummies(columns=["zipcode"])
 
 X = feature_df.to_numpy()
 y = model_df[target].to_numpy()
 
 X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
-    test_size=0.2,
-    random_state=42,
+	X,
+	y,
+	test_size=0.2,
+	random_state=42,
 )
 
 model = XGBRegressor(
-    n_estimators=200,
-    learning_rate=0.08,
-    max_depth=6,
-    subsample=0.8,
-    colsample_bytree=0.8,
-    objective="reg:squarederror",
-    random_state=42,
+	n_estimators=300,
+	learning_rate=0.05,
+	max_depth=6,
+	subsample=0.8,
+	colsample_bytree=0.8,
+	objective="reg:squarederror",
+	random_state=42,
 )
 
 model.fit(X_train, y_train)
 
-predictions = model.predict(X_test)
+preds = model.predict(X_test)
 
-mae = mean_absolute_error(y_test, predictions)
-r2 = r2_score(y_test, predictions)
+rmse = mean_squared_error(y_test, preds) ** 0.5
+mae = mean_absolute_error(y_test, preds)
+r2 = r2_score(y_test, preds)
 
 print(f"Rows used: {model_df.height}")
 print(f"Features: {X.shape[1]}")
+print(f"RMSE: {rmse:,.2f}")
 print(f"MAE: {mae:,.2f}")
 print(f"R^2: {r2:.4f}")
 ```
 
-
-
-```
-The average U.S. bedroom takes up roughly 10% of a home's total square footage. In a standard home, a primary/master bedroom averages 224 sq ft (14' x 16'), while secondary bedrooms average 120 to 132 sq ft (10' x 12' to 11' x 12').
-```
 ```{python}
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_absolute_error, r2_score
-from xgboost import XGBRegressor
+from io import BytesIO
+from pathlib import Path
+import requests
 
-target = "price"
+holdout_url = "https://raw.githubusercontent.com/byui-cse/cse450-course/master/data/housing_holdout_test_mini.csv"
 
-model_df = df.drop_nulls([target])
-feature_df = model_df.drop(target)
-categorical_cols = feature_df.select(pl.col(pl.Utf8)).columns
-feature_df = feature_df.to_dummies(columns=categorical_cols)
+resp = requests.get(holdout_url)
+resp.raise_for_status()
 
-X = feature_df.to_numpy()
-y = model_df[target].to_numpy()
+holdout_df = pl.read_csv(BytesIO(resp.content)).drop(["id", "date"])
+holdout_features = holdout_df.with_columns(
+	pl.col("zipcode").cast(pl.Utf8)
+).to_dummies(columns=["zipcode"])
 
-X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
-    test_size=0.2,
-    random_state=42,
+for col in feature_df.columns:
+	if col not in holdout_features.columns:
+		holdout_features = holdout_features.with_columns(pl.lit(0).alias(col))
+
+holdout_features = holdout_features.select(feature_df.columns)
+
+final_model = XGBRegressor(
+	n_estimators=300,
+	learning_rate=0.05,
+	max_depth=6,
+	subsample=0.8,
+	colsample_bytree=0.8,
+	objective="reg:squarederror",
+	random_state=42,
 )
 
-model = XGBRegressor(
-    n_estimators=200,
-    learning_rate=0.08,
-    max_depth=6,
-    subsample=0.8,
-    colsample_bytree=0.8,
-    objective="reg:squarederror",
-    random_state=42,
-)
+final_model.fit(X, y)
 
-model.fit(X_train, y_train)
+holdout_predictions = final_model.predict(holdout_features.to_numpy())
 
-predictions = model.predict(X_test)
+predictions_df = pl.DataFrame({"price": holdout_predictions})
+output_path = Path("module3-predictions.csv")
+predictions_df.write_csv(output_path)
 
-mae = mean_absolute_error(y_test, predictions)
-r2 = r2_score(y_test, predictions)
-
-print(f"Rows used: {model_df.height}")
-print(f"Features: {X.shape[1]}")
-print(f"MAE: {mae:,.2f}")
-print(f"R^2: {r2:.4f}")
+print(f"Saved {output_path} with {predictions_df.height} predictions")
+predictions_df.head(10)
 ```
