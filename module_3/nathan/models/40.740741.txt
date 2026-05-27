@@ -1,0 +1,2 @@
+RMSE 	Mean Abs Error 	Median Abs Error 	R2 	Percent of houses within 5 percent 	Percent of houses within 10 percent 	Percent of houses within 20 percent
+teamCtlAltEliete 	109003.080147 	60893.333951 	31985.98 	0.854581 	40.740741 	55.555556 	80.246914
