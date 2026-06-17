@@ -1,0 +1,172 @@
+ i need to build an ml model for guessing the housing prices in seattle washington, using polars
+Building an ML model to predict housing prices in Seattle using Polars is a great project! Below are the steps you
+can follow to achieve this:
+
+### Step 1: Install Required Libraries
+
+First, ensure you have all the necessary libraries installed. You'll need `pandas`, `polars`, `scikit-learn`, and
+other utilities.
+
+```bash
+pip install polars scikit-learn pandas numpy matplotlib seaborn
+```
+
+### Step 2: Import Libraries
+
+```python
+import polars as pl
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+import matplotlib.pyplot as plt
+import numpy as np
+```
+
+### Step 3: Load and Explore the Data
+
+Assume you have a CSV file with housing data. Let's load it using Polars.
+
+```python
+# Load the dataset
+df = pl.read_csv("seattle_housing_data.csv")
+
+# Display the first few rows of the dataframe
+print(df.head())
+```
+
+### Step 4: Explore the Data
+
+Examine the structure and summary statistics of your data to understand its characteristics.
+
+```python
+# Show column names
+print(df.columns)
+
+# Describe numerical columns
+summary = df.describe()
+print(summary)
+```
+
+### Step 5: Preprocess the Data
+
+Preprocessing steps include handling missing values, encoding categorical variables, and splitting the dataset
+into training and testing sets.
+
+#### Handle Missing Values
+
+```python
+# Check for nulls
+null_counts = df.select(pl.all().is_null().sum())
+print(null_counts)
+
+# Fill or drop missing values based on your analysis
+df = df.fill_null(0)  # or use a more sophisticated method if needed
+```
+
+#### Encode Categorical Variables
+
+If you have categorical variables, encode them using techniques like one-hot encoding.
+
+```python
+# Assuming ` neighborhood` is a categorical variable
+df = pd.get_dummies(df, columns=["neighborhood"])
+```
+
+#### Split the Data
+
+Split your data into features (`X`) and target (`y`), then further split it into training and testing sets.
+
+```python
+# Select relevant columns for features (X) and target (y)
+features = ["bedrooms", "bathrooms", "sqft_living", "sqft_lot", "floors", "condition", "grade"]
+target = "price"
+
+X = df.select(features).to_pandas()
+y = df[target].to_pandas()
+
+# Split the data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+```
+
+### Step 6: Train a Linear Regression Model
+
+Use `scikit-learn` to build and train your linear regression model.
+
+```python
+# Initialize the model
+model = LinearRegression()
+
+# Fit the model
+model.fit(X_train, y_train)
+
+# Make predictions
+y_pred = model.predict(X_test)
+```
+
+### Step 7: Evaluate the Model
+
+Evaluate the performance of your model using appropriate metrics such as Mean Squared Error (MSE) and R² score.
+
+```python
+# Calculate MSE and R²
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print(f"Mean Squared Error: {mse}")
+print(f"R² Score: {r2}")
+
+# Plot the actual vs predicted prices
+plt.figure(figsize=(10, 6))
+plt.scatter(y_test, y_pred)
+plt.plot([y.min(), y.max()], [y.min(), y.max()], 'k--', lw=4)
+plt.xlabel("Actual Prices")
+plt.ylabel("Predicted Prices")
+plt.title("Actual Prices vs Predicted Prices")
+plt.show()
+```
+
+### Step 8: Improve the Model
+
+You can improve your model by trying different algorithms, feature engineering, or hyperparameter tuning.
+
+```python
+# Example: Try using a Random Forest Regressor
+from sklearn.ensemble import RandomForestRegressor
+
+model_rf = RandomForestRegressor(n_estimators=100, random_state=42)
+model_rf.fit(X_train, y_train)
+
+y_pred_rf = model_rf.predict(X_test)
+
+mse_rf = mean_squared_error(y_test, y_pred_rf)
+r2_rf = r2_score(y_test, y_pred_rf)
+
+print(f"Random Forest - Mean Squared Error: {mse_rf}")
+print(f"Random Forest - R² Score: {r2_rf}")
+
+# Plot the actual vs predicted prices using Random Forest
+plt.figure(figsize=(10, 6))
+plt.scatter(y_test, y_pred_rf)
+plt.plot([y.min(), y.max()], [y.min(), y.max()], 'k--', lw=4)
+plt.xlabel("Actual Prices")
+plt.ylabel("Predicted Prices")
+plt.title("Actual Prices vs Predicted Prices (Random Forest)")
+plt.show()
+```
+
+### Step 9: Save the Model
+
+Once you are satisfied with the model's performance, save it for future use.
+
+```python
+import joblib
+
+# Save the model to a file
+joblib.dump(model_rf, "seattle_housing_price_model.pkl")
+```
+
+### Summary
+
+This guide covers loading and preprocessing data using Polars, training a linear regression model, evaluating its
+performance, and optionally improving it with random forest. You can further refine your model by experimenting
+with more advanced techniques and features!

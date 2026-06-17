@@ -1,0 +1,147 @@
+
+```{python}
+#imports
+import polars as pl
+import torch
+import torch.nn as nn
+from torch.utils.data import TensorDataset, DataLoader
+from sklearn.model_selection import train_test_split
+```
+
+```{python}
+#load training data
+url = "https://raw.githubusercontent.com/byui-cse/cse450-course/master/data/bikes.csv"
+bikes_df = pl.read_csv(url)
+
+# Feature list
+features = [
+    "hr", "temp_c", "feels_like_c", "hum",
+    "windspeed", "weathersit", "season", "holiday", "workingday"
+]
+
+# Select features + targets
+X = bikes_df.select(features)
+y = bikes_df.select(["registered", "casual"])
+
+# Convert to numpy
+X_np = X.to_numpy()
+y_np = y.to_numpy()
+
+#scale numbers
+from sklearn.preprocessing import MinMaxScaler
+
+scaler = MinMaxScaler()
+X_np = scaler.fit_transform(X_np)
+
+
+# Train/test split
+X_train, X_test, y_train, y_test = train_test_split(
+    X_np, y_np, test_size=0.2, random_state=42
+)
+
+# Convert to tensors
+X_train_t = torch.tensor(X_train, dtype=torch.float32)
+y_train_t = torch.tensor(y_train, dtype=torch.float32)
+X_test_t  = torch.tensor(X_test,  dtype=torch.float32)
+```
+
+```{python}
+#creat nural network
+class BikeNet(nn.Module):
+    def __init__(self, input_size, hidden_sizes, output_size):
+        super().__init__()
+
+        layers = []
+        last = input_size
+
+        # Build hidden layers dynamically
+        for size in hidden_sizes:
+            layers.append(nn.Linear(last, size))
+            layers.append(nn.ReLU())   # change activation here if desired
+            last = size
+
+        # Output layer
+        layers.append(nn.Linear(last, output_size))
+
+        self.model = nn.Sequential(*layers)
+
+    def forward(self, x):
+        return self.model(x)
+```
+
+```{python}
+#model settings
+hidden_layers = [256, 128]
+learning_rate = 0.005      # change learning speed
+batch_size    = 64         # change batch size
+epochs        = 200        # change training length
+
+model = BikeNet(
+    input_size=X_train.shape[1],
+    hidden_sizes=hidden_layers,
+    output_size=2
+)
+```
+
+```{python}
+#training loop
+train_ds = TensorDataset(X_train_t, y_train_t)
+train_dl = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
+
+optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+criterion = nn.MSELoss()
+
+for epoch in range(epochs):
+    for xb, yb in train_dl:
+        optimizer.zero_grad()
+        preds = model(xb)
+        loss = criterion(preds, yb)
+        loss.backward()
+        optimizer.step()
+
+    if epoch % 20 == 0:
+        print(f"Epoch {epoch}, Loss: {loss.item()}")
+```
+
+```{python}
+#test predictions
+preds = model(X_test_t)
+print(preds[:5])
+```
+
+```{python}
+#holdout predictions
+holdout_url = "https://raw.githubusercontent.com/byui-cse/cse450-course/master/data/biking_holdout_test_mini.csv"
+holdout_df = pl.read_csv(holdout_url)
+
+#scale numbers
+X_holdout = scaler.transform(X_holdout)
+
+
+X_holdout = holdout_df.select(features).to_numpy()
+X_holdout_t = torch.tensor(X_holdout, dtype=torch.float32)
+
+holdout_preds = model(X_holdout_t).detach().numpy()
+print(holdout_preds[:5])
+```
+
+```{python}
+#format and save predictions
+pred_df = pl.DataFrame({
+    "registered": holdout_preds[:, 0],
+    "casual": holdout_preds[:, 1]
+})
+
+pred_df.write_csv("bike-mini-holdout-predictions.csv")
+```
+
+```{python}
+#combine to one column
+df = pl.read_csv("bike-mini-holdout-predictions.csv")
+
+df = df.with_columns(
+    (pl.col("registered") + pl.col("casual")).alias("predictions")
+)
+
+df.select("predictions").write_csv("combined-predictions.csv")
+```

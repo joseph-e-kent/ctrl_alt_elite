@@ -1,0 +1,79 @@
+# -------------------------
+# Python
+# -------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+*.egg
+*.log
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# VS Code settings
+.vscode/
+
+# -------------------------
+# Image datasets (VERY IMPORTANT)
+# -------------------------
+# Common image formats
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.gif
+*.tiff
+*.tif
+*.webp
+
+# Raw camera formats
+*.cr2
+*.nef
+*.arw
+*.dng
+
+# -------------------------
+# Zip files and archives
+# -------------------------
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# -------------------------
+# Training data folders
+# -------------------------
+training/
+training1/
+training2/
+holdout/
+mini_holdout/
+
+# If you want to keep the folder but ignore contents:
+# training/*
+# !training/.gitkeep
+
+# -------------------------
+# PyTorch / ML artifacts
+# -------------------------
+*.pt
+*.pth
+*.onnx
+runs/          # TensorBoard logs
+checkpoints/
+models/
+
+# -------------------------
+# OS junk
+# -------------------------
+.DS_Store
+Thumbs.db
