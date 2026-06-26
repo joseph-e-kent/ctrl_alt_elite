@@ -1,19 +1,16 @@
 
 ```{python}
 import sys
-print(sys.executable)
-device = "cpu"
-
-```
-
-```{python}
 import torch
-print("CUDA:", torch.version.cuda)
-print("GPU:", torch.cuda.get_device_name(0))
-print("cuDNN:", torch.backends.cudnn.version())
-print("Available:", torch.cuda.is_available())
+
+print(sys.executable)
+
+# Automatically switch from "cpu" to your RTX 5080
+device = "cuda" if torch.cuda.is_available() else "cpu"
+print("Using device:", device)
 
 ```
+
 
 ```{python}
 import os
@@ -31,6 +28,9 @@ import requests
 import zipfile
 import shutil
 
+import time
+
+# Switch device globally to leverage your RTX 5080
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print("Using device:", device)
 
@@ -186,13 +186,18 @@ class CNN(nn.Module):
         x = self.features(x)
         return self.classifier(x)
 
+# FIX: Instantiate the model once, directly onto the designated GPU device
 model = CNN(config["num_classes"]).to(device)
+
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"])
 
 print(model)
+print(f"\n✅ Model successfully hosted on device memory: {next(model.parameters()).device}")
+
 
 ```
+
 
 ```{python}
 train_acc_history = []
@@ -201,6 +206,9 @@ train_loss_history = []
 val_loss_history = []
 
 for epoch in range(config["epochs"]):
+
+    start_time = time.time()   # ⏱️ Start timer
+
     model.train()
     total, correct, running_loss = 0, 0, 0.0
 
@@ -241,7 +249,14 @@ for epoch in range(config["epochs"]):
     train_loss_history.append(train_loss)
     val_loss_history.append(val_loss)
 
-    print(f"Epoch {epoch+1}/{config['epochs']}  Train Acc: {train_acc:.4f}  Val Acc: {val_acc:.4f}")
+    epoch_time = time.time() - start_time   # ⏱️ End timer
+
+    print(
+        f"Epoch {epoch+1}/{config['epochs']}  "
+        f"Train Acc: {train_acc:.4f}  Val Acc: {val_acc:.4f}  "
+        f"Time: {epoch_time:.2f} sec"
+    )
+
 
 ```
 
@@ -285,15 +300,19 @@ def load_holdout(path, img_size):
     return torch.stack(imgs), names
 
 holdout_imgs, holdout_names = load_holdout("data/holdout", config["img_size"])
+
+# Pushes entire evaluation set into your 5080's memory
 holdout_imgs = holdout_imgs.to(device)
 
 model.eval()
 with torch.no_grad():
     outputs = model(holdout_imgs)
+    # Extracts the highest scoring indices and maps the array safely back to CPU
     preds = torch.argmax(outputs, dim=1).cpu().numpy()
 
 df = pd.DataFrame({"File": holdout_names, "Prediction": preds})
 df.to_csv("holdout_predictions.csv", index=False)
 print("Saved holdout_predictions.csv")
+
 
 ```
