@@ -205,9 +205,14 @@ val_acc_history = []
 train_loss_history = []
 val_loss_history = []
 
+model = CNN(config["num_classes"]).to(device)
+optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"])
+best_val_acc = 0.0
+best_settings = {}
+
 for epoch in range(config["epochs"]):
 
-    start_time = time.time()   # ⏱️ Start timer
+    start_time = time.time()
 
     model.train()
     total, correct, running_loss = 0, 0, 0.0
@@ -244,12 +249,28 @@ for epoch in range(config["epochs"]):
     val_acc = correct / total
     val_loss = val_loss_sum / len(val_loader)
 
+    # ⭐ Save best model only when val improves
+    if val_acc > best_val_acc:
+        best_val_acc = val_acc
+
+        best_settings = {
+            "epoch": epoch + 1,
+            "train_acc": train_acc,
+            "val_acc": val_acc,
+            "train_loss": train_loss,
+            "val_loss": val_loss,
+            "config": config.copy()
+        }
+
+        torch.save(model.state_dict(), "best_model.pt")
+        print(f"🔥 Saved NEW best model at epoch {epoch+1} with val_acc={val_acc:.4f}")
+
     train_acc_history.append(train_acc)
     val_acc_history.append(val_acc)
     train_loss_history.append(train_loss)
     val_loss_history.append(val_loss)
 
-    epoch_time = time.time() - start_time   # ⏱️ End timer
+    epoch_time = time.time() - start_time
 
     print(
         f"Epoch {epoch+1}/{config['epochs']}  "
@@ -257,12 +278,9 @@ for epoch in range(config["epochs"]):
         f"Time: {epoch_time:.2f} sec"
     )
 
-
-```
-
-```{python}
-torch.save(model.state_dict(), "best_model.pt")
-print("Saved best_model.pt")
+print("\n🏆 Best Model Summary:")
+for k, v in best_settings.items():
+    print(f"{k}: {v}")
 
 ```
 
@@ -314,5 +332,74 @@ df = pd.DataFrame({"File": holdout_names, "Prediction": preds})
 df.to_csv("holdout_predictions.csv", index=False)
 print("Saved holdout_predictions.csv")
 
+
+```
+
+```{python}
+# Load best model for evaluation
+best_model = CNN(config["num_classes"]).to(device)
+best_model.load_state_dict(torch.load("best_model.pt", map_location=device))
+best_model.eval()
+
+# ⭐ Evaluate ONLY on MINI holdout (201 images with labels)
+mini_imgs, mini_names = load_holdout("data/mini_holdout", config["img_size"])
+mini_imgs = mini_imgs.to(device)
+
+# Load true labels
+answers = pd.read_csv("data/mini_holdout_answers.csv")
+true_labels = answers["ClassId"].values
+
+# Predict
+with torch.no_grad():
+    outputs = best_model(mini_imgs)
+    preds = torch.argmax(outputs, dim=1).cpu().numpy()
+
+# Accuracy
+holdout_acc = (preds == true_labels).mean()
+print(f"📊 Mini Holdout Accuracy: {holdout_acc:.4f}")
+
+```
+
+
+```{python}
+print("\n==============================")
+print("🏆 FINAL BEST MODEL REPORT")
+print("==============================")
+
+print(f"Best Epoch: {best_settings['epoch']}")
+print(f"Train Acc:  {best_settings['train_acc']:.4f}")
+print(f"Val Acc:    {best_settings['val_acc']:.4f}")
+print(f"Train Loss: {best_settings['train_loss']:.4f}")
+print(f"Val Loss:   {best_settings['val_loss']:.4f}")
+
+if 'holdout_acc' in locals():
+    print(f"Holdout Acc: {holdout_acc:.4f}")
+else:
+    print("Holdout Acc: (no labels available)")
+
+```
+
+
+```{python}
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+
+cm = confusion_matrix(true_labels, preds)
+
+plt.figure(figsize=(10,8))
+sns.heatmap(cm, annot=False, cmap="Blues")
+plt.title("Confusion Matrix (Best Model)")
+plt.xlabel("Predicted")
+plt.ylabel("True")
+plt.show()
+
+class_acc = {}
+for cls in np.unique(true_labels):
+    idx = true_labels == cls
+    class_acc[cls] = (preds[idx] == true_labels[idx]).mean()
+
+print("\n📊 Per-Class Accuracy:")
+for cls, acc in class_acc.items():
+    print(f"Class {cls}: {acc:.4f}")
 
 ```
