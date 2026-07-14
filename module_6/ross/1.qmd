@@ -1,0 +1,286 @@
+---
+title: "Lovecraft + Scooby-Doo Text Generator"
+author: "Your Name"
+format:
+  html:
+    theme: cosmo
+    toc: true
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+# Introduction
+
+This project trains a word-level LSTM language model using PyTorch to generate
+dark, Lovecraftian Scooby-Doo style text. The dataset consists of `.txt` files
+from H.P. Lovecraft and Scooby-Doo scripts.
+
+The goal is to produce at least 1000 characters of generated text.
+
+---
+
+```{python}
+import torch, time
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("Using device:", device)
+
+if device.type == "cuda":
+    print("GPU name:", torch.cuda.get_device_name(0))
+    print("Memory allocated:", torch.cuda.memory_allocated(0))
+    print("Memory reserved:", torch.cuda.memory_reserved(0))
+
+```
+
+```{python}
+import glob, re, os
+from collections import Counter
+
+def preprocess_text(text, source):
+    if source == "lovecraft":
+        return "<LOVECRAFT>\n" + text
+
+    elif source == "scooby":
+        lines = text.split("\n")
+        formatted = []
+
+        for line in lines:
+            stripped = line.strip()
+
+            if not stripped:
+                formatted.append("")  # blank line
+                continue
+
+            # Dialogue detection: "Name: text"
+            if ":" in stripped:
+                formatted.append(f"<CHARACTER> {stripped}")
+            # Scene headers detection: "INT ..." or "EXT ..."
+            elif stripped.lower().startswith(("int ", "ext ")):
+                formatted.append(f"<SCENE> {stripped}")
+            else:
+                formatted.append(f"<ACTION> {stripped}")
+
+        return "<SCOOBY>\n" + "\n".join(formatted)
+
+    else:
+        return text
+
+
+
+def load_corpus(root):
+    texts = []
+    for path in glob.glob(root + "/**/*.txt", recursive=True):
+        if os.path.isfile(path):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    raw = f.read()
+
+                    # detect source
+                    if "H.P.Lovecraft" in path:
+                        processed = preprocess_text(raw, "lovecraft")
+                    elif "scooby_doo" in path:
+                        processed = preprocess_text(raw, "scooby")
+                    else:
+                        processed = raw
+
+                    texts.append(processed)
+            except:
+                pass
+    return "\n".join(texts)
+
+
+def tokenize(text):
+    # Preserve punctuation AND newlines
+    # This is the key fix
+    tokens = re.findall(r"[^\s]+|\n", text)
+    return tokens
+
+
+# Load everything
+text = load_corpus(".")
+
+# Duplicate Scooby sections AFTER preprocessing
+scooby_parts = re.findall(r"<SCOOBY>.*?(?=<LOVECRAFT>|$)", text, flags=re.DOTALL)
+balanced_text = text + "\n".join(scooby_parts * 9)
+
+tokens = tokenize(balanced_text)
+
+print("Token count:", len(tokens))
+print("First tokens:", tokens[:40])
+
+
+```
+
+
+```{python}
+counter = Counter(tokens)
+vocab = sorted(counter.keys())
+word2idx = {w: i for i, w in enumerate(vocab)}
+idx2word = {i: w for w, i in word2idx.items()}
+
+encoded = [word2idx[w] for w in tokens]
+vocab_size = len(vocab)
+vocab_size
+
+```
+
+
+```{python}
+import torch
+
+seq_len = 120
+
+def build_sequences(encoded, seq_len):
+    X, y = [], []
+    for i in range(len(encoded) - seq_len):
+        X.append(encoded[i:i+seq_len])
+        y.append(encoded[i+seq_len])
+    return torch.tensor(X), torch.tensor(y)
+
+X, y = build_sequences(encoded, seq_len)
+X.shape, y.shape
+
+```
+
+
+```{python}
+from torch.utils.data import TensorDataset, DataLoader
+
+dataset = TensorDataset(X, y)
+loader = DataLoader(dataset, batch_size=128, shuffle=True)
+
+```
+
+
+```{python}
+import torch.nn as nn
+
+class WordLSTM(nn.Module):
+    def __init__(self, vocab_size, embed_dim=256, hidden_dim=512, num_layers=2, dropout=0.3):
+        super().__init__()
+        self.embedding = nn.Embedding(vocab_size, embed_dim)
+        self.lstm = nn.LSTM(embed_dim, hidden_dim, num_layers=num_layers,
+                            dropout=dropout, batch_first=True)
+        self.fc = nn.Linear(hidden_dim, vocab_size)
+
+    def forward(self, x, hidden=None):
+        x = self.embedding(x)
+        out, hidden = self.lstm(x, hidden)
+        logits = self.fc(out)
+        return logits, hidden
+
+device = "cuda"
+model = WordLSTM(vocab_size).to(device)
+
+```
+
+
+```{python}
+
+# Training loop
+
+criterion = nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+
+loss_history = []
+
+for epoch in range(16):
+    start_time = time.time()   # <-- start timer
+
+    model.train()
+    total_loss = 0
+
+    for batch_x, batch_y in loader:
+        batch_x = batch_x.to(device)
+        batch_y = batch_y.to(device)
+
+        optimizer.zero_grad()
+        logits, _ = model(batch_x)
+        last_logits = logits[:, -1, :]
+        loss = criterion(last_logits, batch_y)
+
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 5.0)
+        optimizer.step()
+
+        total_loss += loss.item()
+
+    epoch_time = time.time() - start_time   # <-- end timer
+
+    avg_loss = total_loss / len(loader)
+    loss_history.append(avg_loss)
+
+    print(f"Epoch {epoch+1:02d} | Loss: {avg_loss:.4f} | Time: {epoch_time:.2f} sec")
+```
+
+
+```{python}
+import matplotlib.pyplot as plt
+
+plt.plot(loss_history)
+plt.title("Training Loss")
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+plt.show()
+
+```
+
+
+```{python}
+import torch.nn.functional as F
+
+def sample_next_word(logits, temperature=0.8, top_k=20):
+    logits = logits / temperature
+    probs = F.softmax(logits, dim=-1)
+
+    top_probs, top_idx = torch.topk(probs, top_k)
+    top_probs = top_probs / top_probs.sum()
+
+    idx = top_idx[torch.multinomial(top_probs, 1)]
+    return idx.item()
+
+def generate_text(model, word2idx, idx2word, seed_text, length=200,
+                  temperature=0.8, top_k=20):
+    model.eval()
+    device = next(model.parameters()).device
+
+    tokens = tokenize(seed_text.lower())
+    input_ids = [word2idx.get(w, 0) for w in tokens]
+    input_tensor = torch.tensor([input_ids], dtype=torch.long).to(device)
+
+    hidden = None
+    generated = tokens.copy()
+
+    for _ in range(length):
+        logits, hidden = model(input_tensor, hidden)
+        next_logits = logits[:, -1, :].squeeze(0)
+        next_id = sample_next_word(next_logits, temperature, top_k)
+        next_word = idx2word[next_id]
+        generated.append(next_word)
+
+        input_ids.append(next_id)
+        input_ids = input_ids[-40:]
+        input_tensor = torch.tensor([input_ids], dtype=torch.long).to(device)
+
+    return " ".join(generated)
+
+```
+
+
+```{python}
+seed = """
+<SCOOBY>
+<SCENE> ABANDONED MANSION – NIGHT
+<CHARACTER> SHAGGY: like, i’ve got a bad feeling about this, scoob.
+<CHARACTER> SCOOBY: ruh‑roh…
+<LINE>
+"""
+
+output = generate_text(model, word2idx, idx2word, seed, length=250, top_k=40, temperature=.8)
+output = output.replace("<line>", "\n")
+
+print(output)
+
+```
