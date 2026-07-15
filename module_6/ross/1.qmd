@@ -278,9 +278,47 @@ seed = """
 <LINE>
 """
 
-output = generate_text(model, word2idx, idx2word, seed, length=250, top_k=40, temperature=.8)
+output = generate_text(model, word2idx, idx2word, seed, length=250, top_k=40, temperature=.3)
 output = output.replace("<line>", "\n")
 
+print(output)
+
+```
+
+
+
+```{python}
+torch.save(model.state_dict(), "lstm_textgen_weights.pt")
+
+
+```
+
+```{python}
+class CNN(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.conv1 = nn.Conv2d(3, 32, 3, padding=1)
+        self.conv2 = nn.Conv2d(32, 64, 3, padding=1)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.fc1 = nn.Linear(64 * 16 * 16, 128)
+        self.fc2 = nn.Linear(128, num_classes)
+
+    def forward(self, x):
+        x = F.relu(self.conv1(x))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = x.view(x.size(0), -1)
+        x = F.relu(self.fc1(x))
+        return self.fc2(x)
+
+```
+
+
+```{python}
+model = WordLSTM(vocab_size).to(device)
+model.load_state_dict(torch.load("lstm_textgen_weights.pt", map_location=device))
+model.eval()
+
+output = generate_text(model, word2idx, idx2word, seed, length=250)
 print(output)
 
 ```

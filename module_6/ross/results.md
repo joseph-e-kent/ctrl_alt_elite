@@ -257,3 +257,116 @@ the gang arrived at the abandoned mansion as the storm rolled in
  <CHARACTER> Velma: For the sake of those two, we better hope this was just a camera good team, don't we? 
  
  <CHARACTER> Daphne: Uh-huh. It's the way I disappeared. 
+
+
+ 5.2
+  <scooby> 
+ <scene> abandoned mansion – night 
+ <character> shaggy: like, i’ve got a bad feeling about this, scoob. 
+ <character> scooby: ruh‑roh… 
+ 
+ 
+ The beach Now, 
+ <ACTION> INT. Mr. E's Headquarters 
+ <CHARACTER> Hatecraft: Don't we're like no boat if this was all the last of the wind and see I still in this game I feel the next wizard manager. 
+ 
+ <CHARACTER> Velma: That either means absolutely nothing, or he just in gonna do us, and as the curse was genius, There's a little town. 
+ 
+ <CHARACTER> Shaggy: No, they're, like, super-good! 
+ 
+ <CHARACTER> Scooby: Yeah! Want one? 
+ 
+ <CHARACTER> Yantz: I don't even know why I let you look for you to coming your mystery? They all had I miss my why as I decided to know she was gonna drill at her. [Ed can't leave this here in the day, you Wow, and the Pericles is over. [moves no man but you'll use the great creatures mystery, it's logic had here in the caves. 
+ 
+ <CHARACTER> Pericles: Then that's our free move, outta police water.] 
+ 
+ <CHARACTER> Fred: Well, if everyone think it's him? 
+ 
+ <CHARACTER> Daphne: I think you're okay, Scoob. Let's have missed your traps to be up to Dr. Sounds baked Alaska. 
+ 
+ <ACTION> [Meanwhile, Velma's starts running out of the drain then pour over by him in there? Scooby opens the visible legs and her hit in the parking lot.] 
+ 
+ <CHARACTER> Pirate 2: Living phone] Don't all a few days need before you can get a Barty Oh, how 'bout I say? Buyer's remorse. 
+
+
+
+ 5.4
+ 
+ <scooby> 
+ <scene> abandoned mansion – night 
+ <character> shaggy: like, i’ve got a bad feeling about this, scoob. 
+ <character> scooby: ruh‑roh… 
+ 
+ 
+ <CHARACTER> Professor Pericles: Have you believe Mr. Perfect love too right for the [flashback starts] and you could let me approach the off] 
+ 
+ <ACTION> [The girl removes them. The mayor enters his car at him.] 
+ 
+ <CHARACTER> Ethan: Hey, not just your excuse me, Huh? 
+ 
+ <CHARACTER> Voice: I've meet because for Vincent van Ghoul movies? without me? 
+ 
+ <CHARACTER> Mother: Huh? Oh, no. I wouldn't crushed creatures. on, 
+ I much need one of these new live from Fruitmeir's dessert. That's it! 
+ 
+ <CHARACTER> Daphne: [to Shaggy] Hey, what's up, but I need a train trap here. He's at a pressure for someone's bookbag. 
+ 
+ <CHARACTER> Velma: [shows off] 
+ 
+ <CHARACTER> Shaggy: Like, me me, Scoob! 
+ 
+ <CHARACTER> Scooby: Whew. 
+ 
+ <CHARACTER> Vincent Blake: Are you kidding? Lawyers know we're so far inferior a big trap? 
+ 
+ <CHARACTER> Spartan: Cachinga! I must think you got me like that. It’s a bad Halloween based He's here. 
+ 
+ <CHARACTER> Fred: But I know how. 
+ 
+ <ACTION> [Scene cuts.] 
+ 
+ <CHARACTER> Shaggy: Like, whoever we love totally revealing that as Like, his ghost name was best away then we could have an endless supply of our club knew Que into the city that in sound] he like I'm Rung because it was eating so all. 
+ 
+ <CHARACTER> Velma: What's the problem the only in the script. I bet it end the mystery from a stolen painting, were
+
+
+
+ 5.5
+  <scooby> 
+ <scene> abandoned mansion – night 
+ <character> shaggy: like, i’ve got a bad feeling about this, scoob. 
+ <character> scooby: ruh‑roh… 
+ 
+ 
+ <CHARACTER> SCENE: Crystal Cove Spook Museum 
+ 
+ <CHARACTER> Velma: Welcome to where Crystal Cove, Mai Le. I think the girl is filled with her school and her school or my voice and be trapping them? 
+ 
+ <ACTION> [The vampire chases them and Fred. They duck over the ladder and it catches themselves in the closet. It finally collapses at he and the mayor, switch, approaches some of the fish freaks behind her.] 
+ 
+ <CHARACTER> Fred: I'll tell you, Dead Justice. 
+ 
+ <CHARACTER> Daphne: What? 
+ 
+ <CHARACTER> Fred: I guess this means you're not a suspect after all, Mr. Gnales. 
+ 
+ <CHARACTER> All: Uh... huh? 
+ 
+ <CHARACTER> Angie: Maybe you needed a jackal after all. 
+ 
+ <CHARACTER> Spartan: Why won't you leave me alone?! 
+ 
+ <CHARACTER> Headless Horror: You can't have to believe me! My dad should have some crown! [takes out ring from glass case] 
+ 
+ <ACTION> [The elevator door opens again.] 
+ 
+ <ACTION> EXT. Street - Day 
+ <ACTION> [Fred inserts the CD into the Mystery Machine's CD player. Mystery Inc. listens.] 
+ 
+ <CHARACTER> Audio: [laughs] Greetings, everyone. This is Mr. E. 
+ 
+ <CHARACTER> Shaggy: Mr. E?! 
+ 
+ <CHARACTER> Scooby: Yi! [leaps on Shaggy] 
+ 
+ <CHARACTER> Shaggy: Like, he's still mad about the gator house in my drink that looks under a little hint of nacho cheese! [chuckles] Can you make himself put a way to make sure how to say that out of

@@ -65,8 +65,8 @@ mini_holdout/
 # -------------------------
 # PyTorch / ML artifacts
 # -------------------------
-*.pt
 *.pth
+*.pt
 *.onnx
 runs/          # TensorBoard logs
 checkpoints/
